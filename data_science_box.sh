@@ -29,6 +29,14 @@ if [ "$passwd" != "$passwd_confirm" ]
 fi
 
 echo ""
+echo "#########"
+echo "Now create a self-signed SSL key to encrypt password transmission in the browser."
+echo "#########"
+
+path_to_pem="/home/ubuntu/.ssh/ipython_$profileName.pem"
+openssl req -x509 -nodes -days 365 -newkey rsa:1024 -keyout $path_to_pem -out $path_to_pem
+
+echo ""
 echo ""
 echo "#########"
 echo "To limit security risk, create a user and password for rstudio-server"
@@ -45,6 +53,9 @@ if [ "$rstudioPassword" != "$rstudioPassword_confirm" ]
 		echo "rstudio-server user passwords did not match! Please re-run script, and be careful!"
 		exit
 fi
+
+echo ""
+echo ""
 
 sudo groupadd $rstudioGroup
 sudo useradd -m -N $rstudioUser
@@ -157,12 +168,14 @@ rm $passwd_file
 ipython profile create $profileName
 notebook_config="/home/ubuntu/.ipython/profile_$profileName/ipython_notebook_config.py"
 
+
 # Append to the config file the things you want
 echo "c.IPKernelApp.pylab = 'inline' " | sudo tee -a $notebook_config
 echo "c.NotebookApp.ip = '*' " | sudo tee -a $notebook_config
 echo "c.NotebookApp.open_browser = False " | sudo tee -a $notebook_config
 echo "c.NotebookApp.password = u'$passwd_hash'" | sudo tee -a $notebook_config
 echo "c.NotebookApp.port = 8888" | sudo tee -a $notebook_config
+echo "c.NotebookApp.certfile = '$path_to_pem'" | sudo tee -a $notebook_config
 
 # Clean up
 sudo rm -rf Downloads
